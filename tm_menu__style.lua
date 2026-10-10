@@ -1,0 +1,131 @@
+-- TrueMoan v3.1 by illa3d
+-- MENU STYLES for True Moan
+
+-------------------------------------------------------------------------------------------------
+-- MENU ELEMENTS
+-------------------------------------------------------------------------------------------------
+
+TM_MenuOk = "<color=#e87435>» OK</color>"
+TM_MenuCancel = "<color=#e85035>× CANCEL</color>"
+TM_MenuMod = "<color=#e87435>« MOD MENU</color>"
+TM_MenuBack = "<color=#e87435>« BACK</color>"
+TM_MenuClose = "<color=#e85035>× CLOSE</color>"
+TM_MenuAccent = "#df9c3d"
+TM_EndColor = "</color>"
+TM_UP = "|>| "
+TM_DN = "|<| "
+
+-------------------------------------------------------------------------------------------------
+-- DECIMALS
+-------------------------------------------------------------------------------------------------
+TM_Dec_Body = 2
+TM_Dec_Anim = 2
+TM_Dec_Opt = 2
+TM_Dec_Sex = 0
+
+-------------------------------------------------------------------------------------------------
+-- ACCENT VALUES FORMATTING
+-------------------------------------------------------------------------------------------------
+
+function AccBool (bol)
+	 return FCol(bol and "ON" or "OFF", TM_MenuAccent)
+end
+function AccBoolSX (bol)
+	 return FCol(bol and "Male" or "Female", TM_MenuAccent)
+end
+function AccBoolDE (bol)
+	 return FCol(bol and "Enabled" or "Disabled", TM_MenuAccent)
+end
+function AccBoolYN (bol, plain)
+	local label = bol and "Yes" or "No"
+	return plain == true and label or FCol(label, TM_MenuAccent)
+end
+function AccBoolOC (bol, plain)
+	local label = bol and "Open" or "Closed"
+	return plain == true and label or FCol(label, TM_MenuAccent)
+end
+function AccStr (str)
+	return FCol(str, TM_MenuAccent)
+end
+function AccNum (value, decimals, plain)
+	local label = FDec(value, decimals)
+	return plain == true and label or FCol(label, TM_MenuAccent)
+end
+function AccTime (timestamp, decimals)
+	return AccNum((os.time() - timestamp), decimals) .. "s ago"
+end
+function AccNumPC (value, decimals, plain)
+	local label = FDec(value * 100, decimals) .. "%"
+	return plain == true and label or FCol(label, TM_MenuAccent)
+end
+function AccTextNum1 (text, value, decimals)
+	return text .. " " .. FCol(FDec(value, decimals), TM_MenuAccent)
+end
+function AccTextNum2 (text1, value1, text2, value2, decimals)
+	return text1 .. " " .. FCol(FDec(value1, decimals), TM_MenuAccent) .. " |" .. text2 .. " " .. FCol(FDec(value2, decimals), TM_MenuAccent)
+end
+function AccTextNum3 (text1, value1, text2, value2, text3, value3, decimals)
+	return text1 .. " " .. FCol(FDec(value1, decimals), TM_MenuAccent) .. " |" .. text2 .. " " .. FCol(FDec(value2, decimals), TM_MenuAccent) .. " |" .. text3 .. " " .. FCol(FDec(value3, decimals), TM_MenuAccent)
+end
+
+-------------------------------------------------------------------------------------------------
+-- CUSTOM LABELS
+-------------------------------------------------------------------------------------------------
+function TM_MenuClose_AutoSexStats(human)
+	return TM_MenuClose .. "	" .. TMMLabel_AutoSexStats(human)
+end
+
+function TMMLabel_AutoSexStats(human)
+	local stats = TMHStatsGet(human)
+	if not TM_AutoSex or not stats then return "" end
+	if stats.IsClimax then return " | " ..TMMLabel_AutoSex(human)
+	else return "| Hot " ..TMMLabel_Arousal(human, true).. " | " ..TMMLabel_AutoSex(human) end
+end
+
+function TMMLabel_AutoSex(human, showDirection)
+	if not TM_AutoSex then return "OFF (options)" end
+	local stats = TMHStatsGet(human)
+	if not stats then return "" end
+	local direction = (showDirection == true and not stats:IsAutoSexMax()) and (stats.AutoSexUp and "> " or "< ") or ""
+	if stats.IsClimax then return "Climax!"
+	elseif not stats.AutoSex then return AccStr("OFF")
+	else return direction .. AccStr(stats.AutoSexTier) end
+end
+
+function TMMLabel_Voice(human, plain)
+	local stats = TMHStatsGet(human)
+	if not stats then return "" end
+	if not TM_Voice then return "OFF (options)"
+	elseif not stats.IsVoice then return plain == true and "OFF" or AccStr("OFF")
+	else return plain == true and stats.VoiceName or AccStr(stats.VoiceName) end
+end
+
+function TMMLabel_Sfx(human, plain)
+	local stats = TMHStatsGet(human)
+	if not stats then return "" end
+	if not TM_SFX then return "OFF (options)"
+	elseif not stats.IsSfx then return plain == true and "OFF" or AccStr("OFF")
+	else return plain == true and stats.SfxName or AccStr(stats.SfxName) end
+end
+
+function TMMLabel_Arousal(human, skipLetter)
+	local stats = TMHStatsGet(human)
+	if not stats then return "" end
+	return (skipLetter and "" or "A ") .. (stats.IsClimax and AccStr("Climax!") or AccNumPC(stats.Arousal))
+end
+
+function TMMLabel_Cum(human, plain)
+	local stats = TMHStatsGet(human)
+	if not stats then return "" end
+	return AccBoolYN(stats.IsCumming, plain) .. (stats.IsCumming and (" | " .. AccNum(stats.CumFrequency, 1, plain) .. "s") or "")
+end
+
+function TMMLabel_Holes(human)
+	local stats = TMHStatsGet(human)
+	if not stats or not stats.SexBody or IsTableEmpty(stats.SexBody) then return "" end
+	local bodyStr = ""
+	for _, actBody in pairs(stats.SexBody) do
+		bodyStr = bodyStr .. (bodyStr ~= "" and ", " or "") .. actBody
+	end
+	return bodyStr ~= "" and bodyStr or "-"
+end
